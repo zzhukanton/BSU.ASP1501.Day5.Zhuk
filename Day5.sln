@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleUI", "ConsoleUI\ConsoleUI.csproj", "{D15CC80E-E283-4886-A880-F1F9B2012B17}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Logic", "Logic\Logic.csproj", "{0243D6A0-7E41-4A73-9231-69AD5CF61F02}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Entities", "Entities\Entities.csproj", "{B6FF055F-3CC2-4C2D-8B4E-A069C9AE8685}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D15CC80E-E283-4886-A880-F1F9B2012B17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D15CC80E-E283-4886-A880-F1F9B2012B17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D15CC80E-E283-4886-A880-F1F9B2012B17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D15CC80E-E283-4886-A880-F1F9B2012B17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0243D6A0-7E41-4A73-9231-69AD5CF61F02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0243D6A0-7E41-4A73-9231-69AD5CF61F02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0243D6A0-7E41-4A73-9231-69AD5CF61F02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0243D6A0-7E41-4A73-9231-69AD5CF61F02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6FF055F-3CC2-4C2D-8B4E-A069C9AE8685}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6FF055F-3CC2-4C2D-8B4E-A069C9AE8685}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6FF055F-3CC2-4C2D-8B4E-A069C9AE8685}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6FF055F-3CC2-4C2D-8B4E-A069C9AE8685}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
