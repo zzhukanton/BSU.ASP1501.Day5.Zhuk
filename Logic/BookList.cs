@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Entities;
 using System.IO;
+using NLog;
 
 namespace Logic
 {
@@ -17,6 +18,11 @@ namespace Logic
         /// Internal storage of repostory of books
         /// </summary>
         private List<Book> books;
+
+        /// <summary>
+        /// Logger object
+        /// </summary>
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// Path to repository file
@@ -38,16 +44,30 @@ namespace Logic
         /// <param name="book">Some new book</param>
         public void AddBook(Book book)
         {
-            if (book == null)
-                throw new ArgumentNullException("Book is null");
-
-            LoadToList();
-            if (books.Contains(book))
-                throw new ArgumentException("Book is already in booklist");
-            else
+            try
             {
-                books.Add(book);
-                LoadToFile();
+                if (book == null)
+                    throw new ArgumentNullException("Book is null");
+
+                LoadToList();
+                if (books.Contains(book))
+                    throw new ArgumentException("Book is already in booklist");
+                else
+                {
+                    books.Add(book);
+                    logger.Info("Book was added successfully");
+                    LoadToFile();
+                }
+            }
+            catch (ArgumentNullException e)
+            {
+                logger.Info("Error while add book - {0}", e.Message);
+                logger.Error(e.StackTrace);
+            }
+            catch (ArgumentException e)
+            {
+                logger.Info("{0:u} Error while add book - {1}", DateTime.Now, e.Message);
+                logger.Error(e.StackTrace);
             }
         }
 
@@ -57,16 +77,25 @@ namespace Logic
         /// <param name="book">Some book to remove</param>
         public void RemoveBook(Book book)
         {
-            if (book == null)
-                throw new ArgumentException("Book is null");
-
-            LoadToList();
-            if (!books.Contains(book))
-                throw new ArgumentException("There is no this book in booklist");
-            else
+            try
             {
-                books.Remove(book);
-                LoadToFile();
+                if (book == null)
+                    throw new ArgumentException("Book is null");
+
+                LoadToList();
+                if (!books.Contains(book))
+                    throw new ArgumentException("There is no this book in booklist");
+                else
+                {
+                    books.Remove(book);
+                    logger.Info("Book was removed successfully");
+                    LoadToFile();
+                }
+            }
+            catch (ArgumentException e)
+            {
+                logger.Info("Error while remove book - {0}", e.Message);
+                logger.Error(e.StackTrace);
             }
         }
 
@@ -78,10 +107,13 @@ namespace Logic
         public Book FindBookByTag(Func<Book, bool> function)
         {
             if (function == null)
+            {
+                logger.Error("Error while find book by tag");
                 throw new ArgumentNullException("Tag is null");
-
+            }
             LoadToList();
             Book result = books.First(function);
+            logger.Info("Book was found successfully");
 
             return result;
         }
@@ -93,6 +125,7 @@ namespace Logic
         {
             LoadToList();
             books.Sort(Comparer<Book>.Default);
+            logger.Info("Sorted successfully");
             LoadToFile();
         }
 
@@ -103,9 +136,13 @@ namespace Logic
         public void SortBooksByTag(IComparer<Book> comparer)
         {
             if (comparer == null)
+            {
+                logger.Error("Error while sorting with comparer");
                 throw new ArgumentNullException("Comparer is null");
+            }
             LoadToList();
             books.Sort(comparer);
+            logger.Info("Sorted successfully");
             LoadToFile();
         }
 
@@ -130,7 +167,6 @@ namespace Logic
         {
             if (book == null)
                 throw new ArgumentNullException("Book is null");
-
             foreach (Book b in books)
             {
                 if (b.Equals(book))
@@ -160,13 +196,18 @@ namespace Logic
                         books.Add(b);
                     }
                 }
+                logger.Info("Loaded from repository successfully", DateTime.Now);
             }
-            catch (FileNotFoundException)
+            catch (FileNotFoundException e)
             {
+                logger.Info("Error while load to list - {0}", e.Message);
+                logger.Error(e.StackTrace);
                 throw new InvalidDataException("File not found");
             }
-            catch (IOException)
+            catch (IOException e)
             {
+                logger.Info("Error while load to list - {0}", e.Message);
+                logger.Error(e.StackTrace);
                 throw new InvalidOperationException("Cannot load file");
             }
         }
@@ -190,13 +231,18 @@ namespace Logic
                         writer.Write(book.Year);
                     }
                 }
+                logger.Info("Loaded to repository succesfully");
             }
-            catch (FileNotFoundException)
+            catch (FileNotFoundException e)
             {
+                logger.Info("Error while saving to repository - {0}", e.Message);
+                logger.Error(e.StackTrace);
                 throw new InvalidDataException("File not found");
             }
-            catch (IOException)
+            catch (IOException e)
             {
+                logger.Info("Error while saving to repository - {0}", e.Message);
+                logger.Error(e.StackTrace);
                 throw new InvalidOperationException("Error when saving to file");
             }
         }
