@@ -5,6 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Logic;
 using Entities;
+using System.IO;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace ConsoleUI
 {
@@ -12,7 +15,11 @@ namespace ConsoleUI
     {
         static void Main(string[] args)
         {
-            BookList list = new BookList();
+            FileRepository frep = new FileRepository();
+            //XMLRepository xrep = new XMLRepository();
+            //LINQ2XMLRepository linqrep = new LINQ2XMLRepository();
+
+            BookList list = new BookList(frep);
             Book b1 = new Book() 
             { 
                 Author = "Tolstoy",

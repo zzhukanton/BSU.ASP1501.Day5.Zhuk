@@ -12,7 +12,7 @@ namespace Logic
     /// <summary>
     /// Class witch contains methods for working with binary repositiory of list of books
     /// </summary>
-    public class BookList: IBookListService
+    public class BookList
     {
         /// <summary>
         /// Internal storage of repostory of books
@@ -20,22 +20,34 @@ namespace Logic
         private List<Book> books;
 
         /// <summary>
+        /// Repository with books
+        /// </summary>
+        private IRepository repository;
+
+        /// <summary>
         /// Logger object
         /// </summary>
         private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// Path to repository file
+        /// Constructor with user's way keeping
         /// </summary>
-        private readonly string filePath;
+        /// <param name="repository">Object describing storage kind</param>
+        public BookList(IRepository repository)
+        {
+            if (repository == null)
+                throw new ArgumentNullException("Repository is undefined");
+            books = new List<Book>();
+            this.repository = repository;
+        }
 
+        /// <summary>
+        /// Dedault constructor (uses file as a repository) 
+        /// </summary>
         public BookList()
         {
             books = new List<Book>();
-            filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "books.bin");
-            using (FileStream fs = new FileStream(filePath, FileMode.Create))
-            {
-            }
+            this.repository = new FileRepository();
         }
 
         /// <summary>
@@ -49,24 +61,19 @@ namespace Logic
                 if (book == null)
                     throw new ArgumentNullException("Book is null");
 
-                LoadToList();
+                books = repository.LoadToList();
                 if (books.Contains(book))
                     throw new ArgumentException("Book is already in booklist");
                 else
                 {
                     books.Add(book);
                     logger.Info("Book was added successfully");
-                    LoadToFile();
+                    repository.LoadToFile(books);
                 }
             }
-            catch (ArgumentNullException e)
+            catch (Exception e)
             {
-                logger.Info("Error while add book - {0}", e.Message);
-                logger.Error(e.StackTrace);
-            }
-            catch (ArgumentException e)
-            {
-                logger.Info("{0:u} Error while add book - {1}", DateTime.Now, e.Message);
+                logger.Info(e.Message);
                 logger.Error(e.StackTrace);
             }
         }
@@ -82,19 +89,19 @@ namespace Logic
                 if (book == null)
                     throw new ArgumentException("Book is null");
 
-                LoadToList();
+                books = repository.LoadToList();
                 if (!books.Contains(book))
                     throw new ArgumentException("There is no this book in booklist");
                 else
                 {
                     books.Remove(book);
                     logger.Info("Book was removed successfully");
-                    LoadToFile();
+                    repository.LoadToFile(books);
                 }
             }
-            catch (ArgumentException e)
+            catch (Exception e)
             {
-                logger.Info("Error while remove book - {0}", e.Message);
+                logger.Info(e.Message);
                 logger.Error(e.StackTrace);
             }
         }
@@ -106,14 +113,24 @@ namespace Logic
         /// <returns>Book</returns>
         public Book FindBookByTag(Func<Book, bool> function)
         {
-            if (function == null)
+            Book result = null;
+
+            try
             {
-                logger.Error("Error while find book by tag");
-                throw new ArgumentNullException("Tag is null");
+                if (function == null)
+                {
+                    logger.Error("Error while find book by tag");
+                    throw new ArgumentNullException("Tag is null");
+                }
+                books = repository.LoadToList();
+                result = books.First(function);
+                logger.Info("Book was found successfully");
             }
-            LoadToList();
-            Book result = books.First(function);
-            logger.Info("Book was found successfully");
+            catch (Exception e)
+            {
+                logger.Info(e.Message);
+                logger.Error(e.StackTrace);
+            }
 
             return result;
         }
@@ -123,10 +140,18 @@ namespace Logic
         /// </summary>
         public void SortBooksByTag()
         {
-            LoadToList();
-            books.Sort(Comparer<Book>.Default);
-            logger.Info("Sorted successfully");
-            LoadToFile();
+            try
+            {
+                books = repository.LoadToList();
+                books.Sort(Comparer<Book>.Default);
+                logger.Info("Sorted successfully");
+                repository.LoadToFile(books);
+            }
+            catch (Exception e)
+            {
+                logger.Info(e.Message);
+                logger.Error(e.StackTrace);
+            }
         }
 
         /// <summary>
@@ -135,15 +160,23 @@ namespace Logic
         /// <param name="comparer">IComparer object</param>
         public void SortBooksByTag(IComparer<Book> comparer)
         {
-            if (comparer == null)
+            try
             {
-                logger.Error("Error while sorting with comparer");
-                throw new ArgumentNullException("Comparer is null");
+                if (comparer == null)
+                {
+                    logger.Error("Error while sorting with comparer");
+                    throw new ArgumentNullException("Comparer is null");
+                }
+                books = repository.LoadToList();
+                books.Sort(comparer);
+                logger.Info("Sorted successfully");
+                repository.LoadToFile(books);
             }
-            LoadToList();
-            books.Sort(comparer);
-            logger.Info("Sorted successfully");
-            LoadToFile();
+            catch (Exception e)
+            {
+                logger.Info(e.Message);
+                logger.Error(e.StackTrace);
+            }
         }
 
         public override string ToString()
@@ -173,78 +206,6 @@ namespace Logic
                     return true;
             }
             return false;
-        }
-
-        /// <summary>
-        /// Method that "synchronize" internal list of books with binary repository,
-        /// reads the repository and writes values in internal list
-        /// </summary>
-        private void LoadToList()
-        {
-            try
-            {
-                using (BinaryReader reader = new BinaryReader(File.OpenRead(filePath)))
-                {
-                    while (reader.BaseStream.Position < reader.BaseStream.Length)
-                    {
-                        Book b = new Book();
-                        b.Author = reader.ReadString();
-                        b.Title = reader.ReadString();
-                        b.Publiser = reader.ReadString();
-                        b.NumberOfPages = reader.ReadInt32();
-                        b.Year = reader.ReadInt32();
-                        books.Add(b);
-                    }
-                }
-                logger.Info("Loaded from repository successfully", DateTime.Now);
-            }
-            catch (FileNotFoundException e)
-            {
-                logger.Info("Error while load to list - {0}", e.Message);
-                logger.Error(e.StackTrace);
-                throw new InvalidDataException("File not found");
-            }
-            catch (IOException e)
-            {
-                logger.Info("Error while load to list - {0}", e.Message);
-                logger.Error(e.StackTrace);
-                throw new InvalidOperationException("Cannot load file");
-            }
-        }
-
-        /// <summary>
-        /// Method that "synchronize" internal list of books with binary repository,
-        /// writes the internal list of books to binary repository
-        /// </summary>
-        private void LoadToFile()
-        {
-            try
-            {
-                using (BinaryWriter writer = new BinaryWriter(File.Create(filePath)))
-                {
-                    foreach (Book book in books)
-                    {
-                        writer.Write(book.Title);
-                        writer.Write(book.Author);
-                        writer.Write(book.Publiser);
-                        writer.Write(book.NumberOfPages);
-                        writer.Write(book.Year);
-                    }
-                }
-                logger.Info("Loaded to repository succesfully");
-            }
-            catch (FileNotFoundException e)
-            {
-                logger.Info("Error while saving to repository - {0}", e.Message);
-                logger.Error(e.StackTrace);
-                throw new InvalidDataException("File not found");
-            }
-            catch (IOException e)
-            {
-                logger.Info("Error while saving to repository - {0}", e.Message);
-                logger.Error(e.StackTrace);
-                throw new InvalidOperationException("Error when saving to file");
-            }
         }
     }
 }
